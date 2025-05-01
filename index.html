@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E C Limpeza - Pedido</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>E C Limpeza</h1>
+    <p>Pedido de Compra</p>
+  </header>
+
+  <main>
+    <form id="pedidoForm">
+      <section class="cliente">
+        <h2>Dados do Cliente</h2>
+        <input type="text" placeholder="Nome do Cliente" id="cliente" required>
+        <input type="text" placeholder="Contato (telefone ou WhatsApp)" id="contato" required>
+        <input type="text" placeholder="Endereço de Entrega" id="endereco" required>
+      </section>
+
+      <section class="produtos">
+        <h2>Produtos</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Quant.</th>
+              <th>Unitário (R$)</th>
+              <th>Total (R$)</th>
+            </tr>
+          </thead>
+          <tbody id="produtosTable">
+            <!-- preenchido via JS -->
+          </tbody>
+        </table>
+      </section>
+
+      <div class="total">
+        <strong>Total Geral: R$ <span id="totalGeral">0.00</span></strong>
+      </div>
+
+      <button type="submit">Gerar Recibo PDF</button>
+    </form>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 E C Limpeza</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
