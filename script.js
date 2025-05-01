@@ -11,6 +11,10 @@ const produtos = [
   { nome: "Limpa Alumínio (1L)", preco: 5 } // Corrigido de "Limpa Alúminio" para "Limpa Alumínio" se necessário
 ];
 
+// Load the Pix logo image
+const pixLogo = new Image();
+pixLogo.src = 'pix.png'; // Make sure 'pix.png' is in the same directory as your index.html
+
 function preencherTabela() {
   const tabela = document.getElementById('produtosTable');
   produtos.forEach((prod, i) => {
@@ -110,7 +114,7 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
     y += 6; // Espaçamento para o próximo produto
 
     // Adiciona nova página se necessário (antes do rodapé)
-    if (y > 260) {
+    if (y > 250) { // Adjusted threshold to account for larger footer
        doc.addPage();
        y = 20; // Reseta Y
        // Readiciona cabeçalho da tabela na nova página
@@ -137,20 +141,42 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
   doc.setFont("helvetica", "bold");
   doc.text(`TOTAL GERAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}`, colTotal, y, { align: 'right' });
 
-  // --- Rodapé Azul com Marca d'água ---
+  // --- Rodapé com Informações Pix e Logo ---
   const pageHeight = doc.internal.pageSize.getHeight();
-  const footerHeight = 15; // Altura do rodapé pode ser ajustada se desejar
+  const footerHeight = 30; // Further increased footer height for logo
   const footerY = pageHeight - footerHeight;
 
-  // Cor de fundo azul clara para o rodapé
   // Cor de fundo azul mais forte para o rodapé
-  // Usando o azul primário (RGB: 10, 54, 157 que é #0A369D)
   doc.setFillColor(10, 54, 157);
-  doc.rect(0, footerY, doc.internal.pageSize.getWidth(), footerHeight, 'F'); // 'F' para preencher com a cor definida
+  doc.rect(0, footerY, doc.internal.pageSize.getWidth(), footerHeight, 'F');
+
+  // Add Pix information to the footer
+  doc.setFontSize(8); // Smaller font size for footer text
+  doc.setTextColor(255, 255, 255); // White color for text
+  const pixInfoX = 10;
+  let pixInfoY = footerY + 5; // Adjust vertical position for text
+  doc.text("Informações para Pagamento Pix:", pixInfoX, pixInfoY);
+  doc.text(`- Chave: 86 98817-0867 - Francisco Campelo De Alencar (Bco do Brasil S.A)`, pixInfoX, pixInfoY + 5);
+  doc.text(`- Chave: 86 98878-6328 - Eliete Pereira Campelo de Alencar (Bco do Brasil S.A)`, pixInfoX, pixInfoY + 10);
+
+  // Add Pix logo to the footer if loaded
+  const logoWidth = 20; // Adjust logo width as needed
+  const logoHeight = 15; // Adjust logo height as needed
+  const logoX = doc.internal.pageSize.getWidth() - logoWidth - 10; // Position from the right
+  const logoY = footerY + (footerHeight - logoHeight) / 2; // Center vertically in the footer
+
+   if (pixLogo.complete && pixLogo.naturalHeight !== 0) { // Check if the image is loaded and valid
+        try {
+            doc.addImage(pixLogo, 'PNG', logoX, logoY, logoWidth, logoHeight);
+        } catch (error) {
+            console.error("Erro ao adicionar imagem ao PDF:", error);
+        }
+   } else {
+       console.warn("Logo Pix não carregada a tempo para ser adicionada ao PDF.");
+   }
 
 
-  // Salvar o PDF
-  // Gera um nome de arquivo mais seguro, removendo espaços e caracteres especiais
+  // Salvar o PDF - This should always be called after the document is built
   const safeClienteName = cliente.replace(/[^a-zA-Z0-9]/g, '_') || 'Cliente';
   doc.save(`Recibo_EC_Limpeza_${safeClienteName}.pdf`);
 }
