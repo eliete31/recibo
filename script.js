@@ -2,16 +2,15 @@ const produtos = [
   // Ordem alterada conforme solicitado
   { nome: "Sabão Líquido Roupas (5L)", preco: 20 },
   { nome: "Amaciante (5L)", preco: 15 },
-  // Novo produto adicionado
-  { nome: "Multiuso (5L)", preco: 10 },
   { nome: "Detergente Neutro (5L)", preco: 15 },
-  { nome: "Água Sanitária (5L)", preco: 10 },
   { nome: "Desinfetante (5L)", preco: 12 },
-  { nome: "Sabonete Líquido Mãos (1L)", preco: 10 },
+  { nome: "Água Sanitária (5L)", preco: 10 },
   { nome: "Desengordurante (1L)", preco: 15 },
+  { nome: "Sabonete Líquido Mãos (1L)", preco: 10 },
   { nome: "Limpa Vidros (1L)", preco: 8 },
   { nome: "Limpa Baú (1L)", preco: 10 },
-  { nome: "Limpa Alumínio (1L)", preco: 5 }
+  { nome: "Limpa Alumínio (1L)", preco: 5 },
+  { nome: "Multiuso (5L)", preco: 10 }
 ];
 
 // Carrega a logo do Pix
