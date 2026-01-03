@@ -1,3 +1,4 @@
+alert("Versão Nova Carregada!");
 const produtos = [
   // Ordem alterada conforme solicitado
   { nome: "Sabão Líquido Roupas (5L)", preco: 20 },
