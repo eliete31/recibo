@@ -1,6 +1,9 @@
 const produtos = [
-  { nome: "Amaciante (5L)", preco: 15 },
+  // Ordem alterada conforme solicitado
   { nome: "Sabão Líquido Roupas (5L)", preco: 20 },
+  { nome: "Amaciante (5L)", preco: 15 },
+  // Novo produto adicionado
+  { nome: "Multiuso (5L)", preco: 10 },
   { nome: "Detergente Neutro (5L)", preco: 15 },
   { nome: "Água Sanitária (5L)", preco: 10 },
   { nome: "Desinfetante (5L)", preco: 12 },
@@ -21,7 +24,7 @@ function preencherTabela() {
 
   produtos.forEach((prod, i) => {
     const row = document.createElement('tr');
-    // MUDANÇA 1: Adicionamos um input na coluna de preço (class="preco-unitario")
+    // Cria a linha com input de quantidade e input de preço editável
     row.innerHTML = `
       <td style="text-align: left; padding-left: 10px;">${prod.nome}</td>
       <td>
@@ -39,7 +42,6 @@ function preencherTabela() {
 function calcularTotais() {
   let totalGeral = 0;
   
-  // MUDANÇA 2: O cálculo agora lê as linhas da tabela, não apenas o array fixo
   const linhas = document.querySelectorAll('#produtosTable tr');
 
   linhas.forEach(row => {
@@ -47,7 +49,7 @@ function calcularTotais() {
     const inputPreco = row.querySelector('.preco-unitario');
     const spanTotal = row.querySelector('.total-item');
 
-    // Pega os valores atuais que estão na tela
+    // Pega os valores atuais que estão na tela (editados ou não)
     const qtd = parseFloat(inputQtd.value) || 0;
     const precoUnitario = parseFloat(inputPreco.value) || 0;
 
@@ -62,7 +64,7 @@ function calcularTotais() {
   document.getElementById('totalGeral').textContent = totalGeral.toFixed(2);
 }
 
-function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
+function gerarPDF(cliente, contato, endereco, dataPedido, itens, totalGeral) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
@@ -74,10 +76,17 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
   doc.text("E C Limpeza - Recibo de Compra", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
   y += 10;
 
+  // --- Formatar Data para o PDF (ano-mês-dia para dia/mês/ano) ---
+  let dataFormatada = dataPedido;
+  if (dataPedido.includes('-')) {
+      const partes = dataPedido.split('-'); // [2025, 05, 01]
+      dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
   // --- Dados do Cliente ---
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0); 
-  doc.text(`Data: ${(new Date()).toLocaleDateString('pt-BR')}`, 20, y);
+  doc.text(`Data: ${dataFormatada}`, 20, y);
   y += 7;
   doc.text(`Cliente: ${cliente}`, 20, y);
   y += 7;
@@ -187,8 +196,14 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
   preencherTabela(); 
+  
+  // Define a data de hoje automaticamente no campo de data
+  const dataInput = document.getElementById('dataPedido');
+  if(dataInput) {
+      dataInput.valueAsDate = new Date();
+  }
 
-  // MUDANÇA 3: Listener global para recalcular se mudar Quantidade OU Preço
+  // Listener global para recalcular se mudar Quantidade OU Preço
   document.getElementById('produtosTable').addEventListener('input', (e) => {
     if (e.target.classList.contains('qtd') || e.target.classList.contains('preco-unitario')) {
         calcularTotais();
@@ -201,11 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const cliente = document.getElementById('cliente').value;
     const contato = document.getElementById('contato').value;
     const endereco = document.getElementById('endereco').value;
+    // Captura a data selecionada no input
+    const dataPedido = document.getElementById('dataPedido').value;
 
     const itens = [];
     let totalGeral = 0;
 
-    // MUDANÇA 4: Coleta os dados lendo os inputs da tela (pois o preço pode ter mudado)
     const linhas = document.querySelectorAll('#produtosTable tr');
 
     linhas.forEach((row, index) => {
@@ -213,13 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputPreco = row.querySelector('.preco-unitario');
         
         const qtd = parseInt(inputQtd.value) || 0;
-        const precoAtual = parseFloat(inputPreco.value) || 0; // Pega o preço digitado
+        const precoAtual = parseFloat(inputPreco.value) || 0; 
 
         if (qtd > 0) {
             const subtotal = qtd * precoAtual;
             itens.push({
-                nome: produtos[index].nome, // Nome vem do array original para garantir integridade
-                preco: precoAtual,          // Preço vem do input editável
+                nome: produtos[index].nome, 
+                preco: precoAtual,          
                 qtd: qtd,
                 total: subtotal
             });
@@ -227,6 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    gerarPDF(cliente, contato, endereco, itens, totalGeral);
+    gerarPDF(cliente, contato, endereco, dataPedido, itens, totalGeral);
   });
 });
