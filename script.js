@@ -7,22 +7,29 @@ const produtos = [
   { nome: "Sabonete Líquido Mãos (1L)", preco: 10 },
   { nome: "Desengordurante (1L)", preco: 15 },
   { nome: "Limpa Vidros (1L)", preco: 8 },
-  { nome: "Limpa Báu (1L)", preco: 10 }, // Corrigido de "Limpa Báu" para "Limpa Baú" se necessário
-  { nome: "Limpa Alumínio (1L)", preco: 5 } // Corrigido de "Limpa Alúminio" para "Limpa Alumínio" se necessário
+  { nome: "Limpa Baú (1L)", preco: 10 },
+  { nome: "Limpa Alumínio (1L)", preco: 5 }
 ];
 
-// Load the Pix logo image
+// Carrega a logo do Pix
 const pixLogo = new Image();
-pixLogo.src = 'pix.png'; // Make sure 'pix.png' is in the same directory as your index.html
+pixLogo.src = 'pix.png'; 
 
 function preencherTabela() {
   const tabela = document.getElementById('produtosTable');
+  tabela.innerHTML = ''; // Limpa a tabela para evitar duplicatas
+
   produtos.forEach((prod, i) => {
     const row = document.createElement('tr');
+    // MUDANÇA 1: Adicionamos um input na coluna de preço (class="preco-unitario")
     row.innerHTML = `
-      <td>${prod.nome}</td>
-      <td><input type="number" min="0" value="0" data-index="${i}" class="qtd" style="width: 60px; text-align: center;"></td>
-      <td>R$ ${prod.preco.toFixed(2)}</td>
+      <td style="text-align: left; padding-left: 10px;">${prod.nome}</td>
+      <td>
+        <input type="number" min="0" value="0" data-index="${i}" class="qtd" style="width: 60px; text-align: center;">
+      </td>
+      <td>
+        R$ <input type="number" step="0.50" min="0" value="${prod.preco.toFixed(2)}" class="preco-unitario" style="width: 70px; text-align: center;">
+      </td>
       <td><span class="total-item">R$ 0.00</span></td>
     `;
     tabela.appendChild(row);
@@ -31,16 +38,27 @@ function preencherTabela() {
 
 function calcularTotais() {
   let totalGeral = 0;
-  document.querySelectorAll('.qtd').forEach(input => {
-    const index = parseInt(input.dataset.index);
-    const qtd = parseInt(input.value) || 0;
-    const precoUnitario = produtos[index].preco;
+  
+  // MUDANÇA 2: O cálculo agora lê as linhas da tabela, não apenas o array fixo
+  const linhas = document.querySelectorAll('#produtosTable tr');
+
+  linhas.forEach(row => {
+    const inputQtd = row.querySelector('.qtd');
+    const inputPreco = row.querySelector('.preco-unitario');
+    const spanTotal = row.querySelector('.total-item');
+
+    // Pega os valores atuais que estão na tela
+    const qtd = parseFloat(inputQtd.value) || 0;
+    const precoUnitario = parseFloat(inputPreco.value) || 0;
+
     const total = qtd * precoUnitario;
-    // Atualiza o span na linha da tabela
-    input.parentElement.parentElement.querySelector('.total-item').textContent = `R$ ${total.toFixed(2)}`;
+
+    // Atualiza o total da linha
+    spanTotal.textContent = `R$ ${total.toFixed(2)}`;
     totalGeral += total;
   });
-  // Atualiza o total geral no final do formulário
+
+  // Atualiza o total geral
   document.getElementById('totalGeral').textContent = totalGeral.toFixed(2);
 }
 
@@ -48,17 +66,17 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  let y = 20; // Posição inicial Y
+  let y = 20; 
 
-  // Cabeçalho do Recibo
+  // --- Cabeçalho ---
   doc.setFontSize(16);
-  doc.setTextColor(6, 57, 112); // Azul escuro E C Limpeza
+  doc.setTextColor(6, 57, 112); 
   doc.text("E C Limpeza - Recibo de Compra", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
   y += 10;
 
-  // Informações do Cliente
+  // --- Dados do Cliente ---
   doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0); // Preto para o texto normal
+  doc.setTextColor(0, 0, 0); 
   doc.text(`Data: ${(new Date()).toLocaleDateString('pt-BR')}`, 20, y);
   y += 7;
   doc.text(`Cliente: ${cliente}`, 20, y);
@@ -66,58 +84,33 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
   doc.text(`Contato: ${contato}`, 20, y);
   y += 7;
   doc.text(`Endereço: ${endereco}`, 20, y);
-  y += 15; // Mais espaço antes da tabela
+  y += 15; 
 
-  // --- Tabela de Produtos no PDF ---
+  // --- Tabela Header ---
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  const tableStartY = y;
   const colProduto = 20;
-  const colQtde = 120;    // Posição X para Quantidade
-  const colUnit = 145;   // Posição X para Preço Unitário
-  const colTotal = 175;  // Posição X para Preço Total
+  const colQtde = 120;   
+  const colUnit = 145;   
+  const colTotal = 175;  
 
-  // Cabeçalho da Tabela
   doc.text("Produto", colProduto, y);
   doc.text("Qtde", colQtde, y, { align: 'right' });
   doc.text("Unit. (R$)", colUnit, y, { align: 'right' });
   doc.text("Total (R$)", colTotal, y, { align: 'right' });
-  y += 2; // Linha fina abaixo do cabeçalho
+  y += 2;
   doc.setLineWidth(0.2);
-  doc.line(20, y, 190, y); // Linha horizontal (de margem 20 a 190)
+  doc.line(20, y, 190, y); 
   y += 5;
 
-  doc.setFont("helvetica", "normal"); // Fonte normal para os itens
+  doc.setFont("helvetica", "normal"); 
 
+  // --- Itens ---
   itens.forEach(item => {
-    const precoUnitario = item.preco; // Preço unitário já está no item
-    const subtotal = item.total;      // Subtotal já está no item
-
-    // Quebra de linha para nome do produto longo
-    const maxProductNameWidth = 95; // Largura máxima em mm para o nome do produto
-    const productNameLines = doc.splitTextToSize(item.nome, maxProductNameWidth);
-
-    // Imprime a primeira linha (ou única linha) do produto
-    doc.text(productNameLines[0], colProduto, y); // Nome do produto
-    doc.text(item.qtd.toString(), colQtde, y, { align: 'right' }); // Quantidade
-    doc.text(precoUnitario.toFixed(2).replace('.', ','), colUnit, y, { align: 'right' }); // Preço Unitário
-    doc.text(subtotal.toFixed(2).replace('.', ','), colTotal, y, { align: 'right' }); // Subtotal
-
-    // Se o nome do produto foi quebrado, imprime as linhas restantes
-    if (productNameLines.length > 1) {
-        for (let i = 1; i < productNameLines.length; i++) {
-            y += 4; // Avança Y para a próxima linha do mesmo produto
-            doc.text(productNameLines[i], colProduto, y);
-        }
-    }
-
-    y += 6; // Espaçamento para o próximo produto
-
-    // Adiciona nova página se necessário (antes do rodapé)
-    if (y > 250) { // Adjusted threshold to account for larger footer
+    // Verifica quebra de página
+    if (y > 250) {
        doc.addPage();
-       y = 20; // Reseta Y
-       // Readiciona cabeçalho da tabela na nova página
+       y = 20; 
        doc.setFontSize(11);
        doc.setFont("helvetica", "bold");
        doc.text("Produto", colProduto, y);
@@ -130,95 +123,110 @@ function gerarPDF(cliente, contato, endereco, itens, totalGeral) {
        y += 5;
        doc.setFont("helvetica", "normal");
     }
+
+    const maxProductNameWidth = 95; 
+    const productNameLines = doc.splitTextToSize(item.nome, maxProductNameWidth);
+
+    doc.text(productNameLines[0], colProduto, y); 
+    doc.text(item.qtd.toString(), colQtde, y, { align: 'right' }); 
+    doc.text(item.preco.toFixed(2).replace('.', ','), colUnit, y, { align: 'right' }); 
+    doc.text(item.total.toFixed(2).replace('.', ','), colTotal, y, { align: 'right' }); 
+
+    if (productNameLines.length > 1) {
+        for (let i = 1; i < productNameLines.length; i++) {
+            y += 4; 
+            doc.text(productNameLines[i], colProduto, y);
+        }
+    }
+    y += 6; 
   });
 
-  // --- Linha do Total Geral ---
+  // --- Total Geral ---
   y += 5;
   doc.setLineWidth(0.2);
-  doc.line(20, y, 190, y); // Linha acima do total
+  doc.line(20, y, 190, y); 
   y += 7;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text(`TOTAL GERAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}`, colTotal, y, { align: 'right' });
 
-  // --- Rodapé com Informações Pix e Logo ---
+  // --- Rodapé ---
   const pageHeight = doc.internal.pageSize.getHeight();
-  const footerHeight = 30; // Further increased footer height for logo
+  const footerHeight = 30; 
   const footerY = pageHeight - footerHeight;
 
-  // Cor de fundo azul mais forte para o rodapé
   doc.setFillColor(10, 54, 157);
   doc.rect(0, footerY, doc.internal.pageSize.getWidth(), footerHeight, 'F');
 
-  // Add Pix information to the footer
-  doc.setFontSize(8); // Smaller font size for footer text
-  doc.setTextColor(255, 255, 255); // White color for text
+  doc.setFontSize(8); 
+  doc.setTextColor(255, 255, 255); 
   const pixInfoX = 10;
-  let pixInfoY = footerY + 5; // Adjust vertical position for text
+  let pixInfoY = footerY + 5; 
   doc.text("Informações para Pagamento Pix:", pixInfoX, pixInfoY);
   doc.text(`- Chave: 86 98817-0867 - Francisco Campelo De Alencar (Bco do Brasil S.A)`, pixInfoX, pixInfoY + 5);
   doc.text(`- Chave: 86 98878-6328 - Eliete Pereira Campelo de Alencar (Bco do Brasil S.A)`, pixInfoX, pixInfoY + 10);
 
-  // Add Pix logo to the footer if loaded
-  const logoWidth = 20; // Adjust logo width as needed
-  const logoHeight = 15; // Adjust logo height as needed
-  const logoX = doc.internal.pageSize.getWidth() - logoWidth - 10; // Position from the right
-  const logoY = footerY + (footerHeight - logoHeight) / 2; // Center vertically in the footer
+  // Logo Pix
+  const logoWidth = 20; 
+  const logoHeight = 15; 
+  const logoX = doc.internal.pageSize.getWidth() - logoWidth - 10; 
+  const logoY = footerY + (footerHeight - logoHeight) / 2; 
 
-   if (pixLogo.complete && pixLogo.naturalHeight !== 0) { // Check if the image is loaded and valid
+   if (pixLogo.complete && pixLogo.naturalHeight !== 0) { 
         try {
             doc.addImage(pixLogo, 'PNG', logoX, logoY, logoWidth, logoHeight);
         } catch (error) {
-            console.error("Erro ao adicionar imagem ao PDF:", error);
+            console.error("Erro imagem PDF:", error);
         }
-   } else {
-       console.warn("Logo Pix não carregada a tempo para ser adicionada ao PDF.");
    }
 
-
-  // Salvar o PDF - This should always be called after the document is built
   const safeClienteName = cliente.replace(/[^a-zA-Z0-9]/g, '_') || 'Cliente';
   doc.save(`Recibo_EC_Limpeza_${safeClienteName}.pdf`);
 }
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
-  preencherTabela(); // Popula a tabela HTML
-  // Adiciona listener para calcular totais quando a quantidade muda
-  document.querySelectorAll('.qtd').forEach(el => {
-    el.addEventListener('input', calcularTotais);
+  preencherTabela(); 
+
+  // MUDANÇA 3: Listener global para recalcular se mudar Quantidade OU Preço
+  document.getElementById('produtosTable').addEventListener('input', (e) => {
+    if (e.target.classList.contains('qtd') || e.target.classList.contains('preco-unitario')) {
+        calcularTotais();
+    }
   });
 
-  // Adiciona listener para o envio do formulário
   document.getElementById('pedidoForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Impede o envio padrão do formulário
+    e.preventDefault(); 
 
-    // Coleta os dados do cliente
     const cliente = document.getElementById('cliente').value;
     const contato = document.getElementById('contato').value;
     const endereco = document.getElementById('endereco').value;
 
-    // Coleta os itens do pedido com quantidade > 0
     const itens = [];
     let totalGeral = 0;
 
-    document.querySelectorAll('.qtd').forEach(input => {
-      const index = parseInt(input.dataset.index);
-      const qtd = parseInt(input.value) || 0;
-      if (qtd > 0) {
-        const produto = produtos[index];
-        const subtotal = qtd * produto.preco;
-        itens.push({
-          nome: produto.nome,
-          preco: produto.preco, // Inclui o preço unitário
-          qtd: qtd,
-          total: subtotal
-        });
-        totalGeral += subtotal;
-      }
+    // MUDANÇA 4: Coleta os dados lendo os inputs da tela (pois o preço pode ter mudado)
+    const linhas = document.querySelectorAll('#produtosTable tr');
+
+    linhas.forEach((row, index) => {
+        const inputQtd = row.querySelector('.qtd');
+        const inputPreco = row.querySelector('.preco-unitario');
+        
+        const qtd = parseInt(inputQtd.value) || 0;
+        const precoAtual = parseFloat(inputPreco.value) || 0; // Pega o preço digitado
+
+        if (qtd > 0) {
+            const subtotal = qtd * precoAtual;
+            itens.push({
+                nome: produtos[index].nome, // Nome vem do array original para garantir integridade
+                preco: precoAtual,          // Preço vem do input editável
+                qtd: qtd,
+                total: subtotal
+            });
+            totalGeral += subtotal;
+        }
     });
 
-    // Chama a função para gerar o PDF
     gerarPDF(cliente, contato, endereco, itens, totalGeral);
   });
 });
