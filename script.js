@@ -1,11 +1,11 @@
 alert("Versão Nova Carregada!");
 const produtos = [
   // Ordem alterada conforme solicitado
-  { nome: "Sabão Líquido Roupas (5L)", preco: 20 },
-  { nome: "Amaciante (5L)", preco: 15 },
-  { nome: "Detergente Neutro (5L)", preco: 15 },
-  { nome: "Desinfetante (5L)", preco: 12 },
-  { nome: "Água Sanitária (5L)", preco: 10 },
+  { nome: "Sabão Líquido Roupas (5L)", preco: 22 },
+  { nome: "Amaciante (5L)", preco: 17 },
+  { nome: "Detergente Neutro (5L)", preco: 17 },
+  { nome: "Desinfetante (5L)", preco: 15 },
+  { nome: "Água Sanitária (5L)", preco: 12 },
   { nome: "Desengordurante (1L)", preco: 15 },
   { nome: "Sabonete Líquido Mãos (1L)", preco: 10 },
   { nome: "Limpa Vidros (1L)", preco: 8 },
